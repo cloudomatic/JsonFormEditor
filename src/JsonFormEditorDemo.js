@@ -5,6 +5,7 @@ export default function  JsonFormEditorDemo(props) {
 
   const [jsonObject, setJsonObject] = React.useState({
       "customer": "dudeperfect-01293",
+      "region::enum::North America:South America:EMEA:Asia (other):Unknown": "North America",
       "knownAliases": ["the dude", "his dudeness", "dudikoff"],
       "mailingAddress": {
          "streetNumber": 2617,
@@ -12,7 +13,12 @@ export default function  JsonFormEditorDemo(props) {
          "city": "Dallas",
          "state": "Texas"
       },
-      "pets": [ {"kind":"dog", "age":2}, {kind:"cat", "age": 10} ],
+      "preferences": {
+        "animals": true,
+        "vegetables": false,
+        "minerals" : true
+      },
+      "pets": [ {"kind::enum::dog:cat:chicken:bear":"dog", "age":2}, {"kind::enum::dog:cat:chicken:bear":"cat", "age": 10} ],
       "agesOfAnyAdultChildren": [31, 24],
       "name" : {
         "first": "Dude",

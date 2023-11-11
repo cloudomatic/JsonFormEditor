@@ -2,6 +2,7 @@ import React from 'react';
 //import Text from './Text.js';
 import './JsonFormEditor.css';
 import ToggleSwitch from './ToggleSwitch.js';
+import Menu from './Menu.js';
 
 export default function JsonFormEditor({json, defaultView="table", onChangeCallback}) {
 
@@ -42,13 +43,23 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
       return longestString
     }
 
+    // Useful gradient tool https://www.hexcolortool.com/#c3d9ef
+
+    const borderValue = "1px solid black"
+    const inputCellColor = "white"
+
     const tableViewStyles = {
       notes: "Not all styles are defined here, the <input> element has a setting in JsonObjectEditorPanel.css",
       grid: {
         display: "table",
         width: "100%",
-        borderBottom: "1px solid black",
-        inputCellColor: "white",
+        borderBottom: borderValue,
+        inputCellColor: inputCellColor,
+        _shadingColors: [ 
+          "rgba(207, 225, 242, 1)",
+          "rgba(219, 232, 245, 1)",
+          "rgba(239, 245, 251, 1)",
+        ],
         shadingColors: [
           "#b1b7cc",
           "#c8ccdb",
@@ -62,17 +73,29 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
         fontFamily: "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif"
       },
       cell: {
-        border: "1px solid black",
+        border: borderValue,
         borderBottom: "none",
         display: "table-cell",
         padding: "0.25em",
       },
       propertyNameCell: {
         display: "table-cell",
-        width: (getLeftColumnWidth(flattenedJsonObject) + 1) + "em"
+        width: (getLeftColumnWidth(flattenedJsonObject) + 2) + "em",
+        fontWeight: "bold"
       },
       propertyValueCell: {
-        borderLeft: "none"
+        borderLeft: "none",
+        backgroundColor: "#f7fafd"
+      },
+      checkbox: {
+        border: borderValue,
+        cursor: "pointer",
+        display: "inline-block", 
+        backgroundColor: inputCellColor, 
+        marginLeft: "0.1em", 
+        paddingLeft: "0.15em", 
+        height: "100%", 
+        width: "1.0em"
       },
       textInput: {
         backgroundColor: "white",
@@ -83,38 +106,63 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
     }
 
    const handleInspectorPropertyChanged = (event, key) => {
-      if (flattenedJsonObject[key]["type"] != "object") {
+      if (flattenedJsonObject[key]["type"] == "boolean") {
+        var _flattenedJsonObject = JSON.parse(JSON.stringify(flattenedJsonObject))
+        _flattenedJsonObject[key]["value"] = !_flattenedJsonObject[key]["value"]
+      } else if (flattenedJsonObject[key]["type"] != "object") {
         var _flattenedJsonObject = JSON.parse(JSON.stringify(flattenedJsonObject))
         _flattenedJsonObject[key]["value"] = "" + event.target.value
-      }
-      onChangeCallback(window.convertFlatObjectBackToJsonObject(_flattenedJsonObject, json, 0, 0, {lineNumber: 0}))
+      } 
+      onChangeCallback(window.convertFlatObjectBackToJsonObject(_flattenedJsonObject, 0, 0, {lineNumber: 0}))
    }
 
    return (
         <div style={tableViewStyles.grid}>
+          {/*<div style={{width: "20%"}}>
+          { // Show gradients
+            tableViewStyles.grid.shadingColors.map((color, index) => (
+              <div style={{height: "1.0em", backgroundColor: color}}></div>
+            ))
+          }
+          </div>*/}
           {
             Object.keys(flattenedJsonObject).map( (key, index) => {
               if (key !== "lineNumber") {
                 const propertyValue = flattenedJsonObject[key]["key"]
                 const cellValue = flattenedJsonObject[key]["value"]
                 const indentationPadding =(flattenedJsonObject[key]["indentLevel"] * 1 + 0.5) + "em"
-                const cellShading = tableViewStyles.grid.shadingColors[flattenedJsonObject[key]["indentLevel"]]
+                const cellShading = tableViewStyles.grid.shadingColors[Math.min(
+                                      flattenedJsonObject[key]["indentLevel"],
+                                      tableViewStyles.grid.shadingColors.length - 1
+                                    )]
+                const isBooleanValue = (typeof cellValue == "boolean")
                 if (cellValue !== undefined) {
+                  //if (cellValue == true) debugger
                   return (
                     <div style={tableViewStyles.row} key={"row-" + key}>
-                      <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyNameCell, paddingLeft: indentationPadding, backgroundColor: cellShading}}>{getCamelCaseDisplayName(propertyValue)}</div>
-                      <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyValueCell, backgroundColor: tableViewStyles.grid.inputCellColor}}>
-                        <input className="Input"
-                          id={"row-" + key} 
-                          type="text" 
-                          value={flattenedJsonObject[key]["value"] !== undefined ? flattenedJsonObject[key]["value"] : ""}
-                          onChange={(event) => handleInspectorPropertyChanged(event, key)} 
-                          placeholder = "" style={tableViewStyles.textInput} 
-                        />
-                      </div>
+                      <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyNameCell, paddingLeft: indentationPadding, borderRight: isBooleanValue ? "none" : borderValue, backgroundColor: cellShading}}>{getCamelCaseDisplayName(propertyValue)}</div>
+                      {
+                        isBooleanValue ? 
+                        <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyValueCell, backgroundColor: cellShading, borderLeft: "none"}}>
+                          <div style={{}}>
+                            <div id="checkbox" style={tableViewStyles.checkbox} onClick={(event) => handleInspectorPropertyChanged(event, key)}>{cellValue ? <>&#10005;</> : <>&nbsp;</>}</div>
+                            <div style={{display: "inline-block", backgroundColor: cellShading}}/>
+                          </div>
+                        </div>
+                        :
+                        <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyValueCell, backgroundColor: tableViewStyles.grid.inputCellColor}}>
+                          <input className="Input"
+                            id={"row-" + key} 
+                            type="text" 
+                            value={flattenedJsonObject[key]["value"] !== undefined ? flattenedJsonObject[key]["value"] : ""}
+                            onChange={(event) => handleInspectorPropertyChanged(event, key)} 
+                            placeholder = "" style={tableViewStyles.textInput} 
+                          />
+                        </div>
+                      }
                     </div>
                   )
-                } else if (true) { 
+                } else { 
                   return  (
                     // We want the left side cell to colspan=2, which is not supported by CSS display: table
                     <div style={tableViewStyles.row} key={"row-" + key}>
@@ -122,14 +170,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                       <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyValueCell, borderLeft: "none", backgroundColor: cellShading, textAlign: "right"}}><span></span></div>
                     </div>
                   )
-                } else {
-                  return  (
-                    <div style={{ height: "0.1em", backgroundColor: "black", width: "100%"}} key={"row-" + key}>
-                      <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyNameCell, borderRight: "none", backgroundColor: "black", height: "0.1em"}}></div>
-                      <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyValueCell, borderLeft: "none", height: "0.1em", backgroundColor: "black"}}></div>
-                    </div>
-                  )
-                }
+                } 
               }
             })
           }
@@ -147,7 +188,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
     }
 
     if (true) return (
-              <div id="raw-view" style={{border: "1px solid black", backgroundColor: "none", fontSize: "0.8em", height: "98%", width: "99%", padding: "0.0em"}}>
+              <div id="raw-view" style={{border: "1px solid black", backgroundColor: "none", fontSize: "0.8em", height: "100%", width: "99.5%", padding: "0.0em"}}>
                 <div style={{height: "100%", width: "100%", backgroundColor: "none"}}>
                   <pre style={{height: "100%", width: "100%"}}>
                     <textarea id="raw-editor"
@@ -155,7 +196,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                       value={rawJsonTextBuffer}
                       placeholder=""
                       onChange={(event) => handleRawEditChange(event.target.value)}
-                      style={{ paddingLeft: "0.4em", fontFamily: '"Roboto", "Helvetica", "Arial", "sans-serif"', fontSize: "0.9em", border: "none", height: "95%", width: "95%" }}
+                      style={{ paddingLeft: "0.4em", fontFamily: '"Roboto", "Helvetica", "Arial", "sans-serif"', fontSize: "0.9em", border: "none", height: "95%", width: "98%" }}
                     />
                   </pre>
                 </div>
@@ -165,6 +206,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
 
   function formView() {
 
+    const accentColor = "#727ea6"
     const styles = {
       form: {
         fontFamily: "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif",
@@ -175,7 +217,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
         fontSize: "0.7em",
       },
       rowHeader: {
-        backgroundColor: "#727ea6",
+        backgroundColor: accentColor,
         padding: "0.3em 0em 0.4em 1.0em",
         margin: "0.9em 0 0.2em 0",
         width: "95%",
@@ -202,6 +244,22 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
         margin: "0 0 0.2em 0",
         borderRadius: "2px" 
       },
+      checkbox: {
+        border: "1px solid " + accentColor,
+        width: "0.9em",
+        height: "0.9em",
+        display: "inline-block",
+        margin: "auto 0.7em auto auto",
+        verticalAlign: "middle",
+        checkedColor: accentColor,
+        uncheckedColor: "white"
+      },
+      checkboxLabel: {
+        display: "inline-block",
+        margin: "auto",
+        verticalAlign: "middle",
+        padding: "0 0 0 0"
+      },
       textInput: { 
         padding: "0em 0 0.1em 0.4em",
         fontSize: "0.8em",
@@ -209,7 +267,15 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
       }
     }
 
-    const handleFormChange = () => {
+    const handleFormChange = (key, value) => {
+        if (flattenedJsonObject[key]["type"] == "boolean") {
+          var _flattenedJsonObject = JSON.parse(JSON.stringify(flattenedJsonObject))
+          _flattenedJsonObject[key]["value"] = !_flattenedJsonObject[key]["value"]
+        } else if (flattenedJsonObject[key]["type"] != "object") {
+          var _flattenedJsonObject = JSON.parse(JSON.stringify(flattenedJsonObject))
+          _flattenedJsonObject[key]["value"] = "" + value
+        }
+        onChangeCallback(window.convertFlatObjectBackToJsonObject(_flattenedJsonObject, 0, 0, {lineNumber: 0}))
     }
 
     return (
@@ -220,34 +286,58 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                 const fieldName = flattenedJsonObject[key]["key"]
                 const fieldValue = flattenedJsonObject[key]["value"]
                 const indentationPadding =(flattenedJsonObject[key]["indentLevel"] * 1 + 0.5) + "em"
+                const isBoolean = (flattenedJsonObject[key]["type"] == "boolean")
+                const hasEnum =  (flattenedJsonObject[key].hasOwnProperty("enum"))
                 //const cellShading = tableViewStyles.grid.shadingColors[flattenedJsonObject[key]["indentLevel"]]
                 if (fieldValue !== undefined) {
                   return (
                     <div id="row" style={{...styles.row, marginLeft: indentationPadding}} key={"row-" + key}>
-                      <div id="input-field-label" style={styles.inputFieldLabel}>
-                        {getCamelCaseDisplayName(fieldName)}
-                      </div>
-                      <div id="input-field" style={styles.inputField}>
-                        <input className="Input"
-                            id={"row-" + key}
-                            type="text"
-                            value={fieldValue}
-                            onChange={(event) => handleFormChange(event, key)}
-                            placeholder = "" style={styles.textInput}
-                          />
-                        </div>
+                      { 
+                      !isBoolean ? 
+                        <>
+                            <div id="input-field-label" style={styles.inputFieldLabel}>
+                              {getCamelCaseDisplayName(fieldName)}
+                            </div>
+                            <div id="input-field" style={styles.inputField}>
+                              { 
+                                hasEnum ?
+                                  <Menu 
+                                    menuItems={flattenedJsonObject[key]["enum"]} 
+                                    displayElement=<span style={styles.textInput}>{fieldValue}</span>
+                                    itemSelectionCallback={(selectedItem, index) => {handleFormChange(key, selectedItem)}}
+                                  />
+                                  :
+                                  <input className="Input"
+                                      id={"row-" + key}
+                                      type="text"
+                                      value={fieldValue}
+                                      onChange={(event) => handleFormChange(key, event.target.value)}
+                                      placeholder = "" style={styles.textInput}
+                                    />
+                              }
+                            </div>
+                          </>
+                          :
+                          <>
+                            <div id={"checkbox-row-" + key} style={{...styles.checkbox, backgroundColor: fieldValue ? styles.checkbox.checkedColor : styles.checkbox.unCheckedColor }} onClick={(event) => handleFormChange(key, null)}>
+                            </div>
+                            <div id="input-field-label" style={styles.checkboxLabel}>
+                              {getCamelCaseDisplayName(fieldName)}
+                            </div>
+                          </>
+                      }
                     </div>
                   )
                 } else if (fieldName.includes("[") && fieldName.includes("]")) {
                   return  (
                     <div id="array-element-label" style={{...styles.arrayElementHeader, marginLeft: indentationPadding}} key={"row-" + key}>
-                    {getCamelCaseDisplayName(fieldName)}
+                      {getCamelCaseDisplayName(fieldName)}
                     </div>
                   )
                 } else  {
                   return  (
                     <div id="section-row" style={{...styles.rowHeader, marginLeft: indentationPadding}} key={"row-" + key}>
-                    {getCamelCaseDisplayName(fieldName)}
+                      {getCamelCaseDisplayName(fieldName)}
                     </div>
                   )
                 } 

@@ -23,15 +23,17 @@ export default function ToggleSwitch({options = [1, 2, 3], defaultSelected = 1, 
     onSelect !== undefined && onSelect(option)
   }
 
+  // &#9746; &#9744; &#9776;  &#9782;  &#8862;
   return (
         <div id="toggle-switch-root"  style={styles.root} >
           <div style={{textAlign: "center", display: "table-row", padding: "2.0em"}}>
             {
               options.map((option, index) => (
-                <div style={{
+                <div key={index} style={{
                     ...styles.option, 
                     backgroundColor: (option == selectedOption) ? colors[2] : colors[0],
-                    color: (option == selectedOption) ? "white" : colors[3] 
+                    color: (option == selectedOption) ? "white" : colors[3],
+                    fontWeight: (option == selectedOption) ? "bold" : "normal"
                   }}
                   onClick={() => optionSelected(option)}
                 >
