@@ -46,7 +46,6 @@ setup_development_container() {
       apk update
       apk add bash jq curl git yarn
       yarn install
-      sh
 }
 
 

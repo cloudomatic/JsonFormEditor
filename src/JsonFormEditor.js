@@ -4,9 +4,42 @@ import './JsonFormEditor.css';
 import ToggleSwitch from './ToggleSwitch.js';
 import Menu from './Menu.js';
 
-export default function JsonFormEditor({json, defaultView="table", onChangeCallback}) {
+export default function JsonFormEditor({json, defaultView="table", variant="default", size="small", showToggle=false, onChange}) {
 
   const flattenedJsonObject = window.convertJsonObjectToFlatObject(json, { "lineNumber": 0}, 0)
+
+  const [dropdownMenuState, setDropdownMenuState] = React.useState({})
+
+
+  if (size == "large") {
+    var fontBase = 1.0
+  } else if (size == "medium") {
+    var fontBase = 0.8
+  } else {
+    var fontBase = 0.6
+  }
+
+  
+  const fontSizes = {
+    toggleBar: {
+      fontSize: fontBase + "em"
+    },
+    rawView: {
+      fontSize: (fontBase + 0.2) + "em",
+      inputFontSize: (fontBase + 0.3) + "em",
+    },
+    formView: {
+      fontSize: (fontBase + 0.1) + "em",
+      rowHeaderFontSize: (fontBase + 0.1) + "em",
+      inputFieldLabelFontSize: fontBase + "em",
+      arrayElementHeaderFontSize: fontBase + "em",
+      inputFontSize: (fontBase + 0.2) + "em"
+    },
+    tableView: {
+      fontSize: fontBase + "em",
+      inputFontSize: (fontBase + 0.2) + "em"
+    }
+  }
 
   const [view, setView] = React.useState(defaultView)
 
@@ -25,6 +58,33 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
       newPhrase += capitalizeWord(tokens[token]) + " "
     }
     return newPhrase.trim()
+  }
+
+  function debugView() {
+
+    const handleRawEditChange = (editedText) => {
+      //setRawJsonTextBuffer(editedText)
+      try {
+        //onChange(JSON.parse(editedText))
+      } catch (error) {
+      }
+    }
+
+    if (true) return (
+              <div id="raw-view" style={{border: "1px solid black", backgroundColor: "none", fontSize: "0.8em", height: "100%", width: "99.5%", padding: "0.0em"}}>
+                <div style={{height: "100%", width: "100%", backgroundColor: "none"}}>
+                  <pre style={{height: "100%", width: "100%"}}>
+                    <textarea id="raw-editor"
+                      type="text"
+                      value={JSON.stringify(flattenedJsonObject, null, 2)}
+                      placeholder=""
+                      onChange={(event) => handleRawEditChange(event.target.value)}
+                      style={{ paddingLeft: "0.4em", fontFamily: '"Roboto", "Helvetica", "Arial", "sans-serif"', fontSize: "0.9em", border: "none", height: "95%", width: "98%" }}
+                    />
+                  </pre>
+                </div>
+            </div>
+    )
   }
        
   function tableView() {
@@ -68,7 +128,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
       },
       row: {
         display: "table-row",
-        fontSize: "0.6em",
+        fontSize: fontSizes.tableView.fontSize,
         fontWeight: "normal",
         fontFamily: "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif"
       },
@@ -100,8 +160,9 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
       textInput: {
         backgroundColor: "white",
         fontFamily: "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif",
-        fontSize: "0.8em",
-        width: "95%"
+        fontSize: fontSizes.tableView.inputFontSize,
+        width: "95%",
+        padding: (fontBase == 0.6) ? "0em 0em 0.2em 0em" : (fontBase == 0.8) ? "0.1em 0em 0.2em 0.2em" : "0.1em 0em 0.2em 0.2em",
       }
     }
 
@@ -113,7 +174,9 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
         var _flattenedJsonObject = JSON.parse(JSON.stringify(flattenedJsonObject))
         _flattenedJsonObject[key]["value"] = "" + event.target.value
       } 
-      onChangeCallback(window.convertFlatObjectBackToJsonObject(_flattenedJsonObject, 0, 0, {lineNumber: 0}))
+      const _jsonObject = window.convertFlatObjectBackToJsonObject(_flattenedJsonObject, {}, 0, {lineNumber: 0})
+      setRawJsonTextBuffer(JSON.stringify(_jsonObject, null, 2))
+      onChange(_jsonObject)
    }
 
    return (
@@ -137,7 +200,6 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                                     )]
                 const isBooleanValue = (typeof cellValue == "boolean")
                 if (cellValue !== undefined) {
-                  //if (cellValue == true) debugger
                   return (
                     <div style={tableViewStyles.row} key={"row-" + key}>
                       <div style={{...tableViewStyles.cell, ...tableViewStyles.propertyNameCell, paddingLeft: indentationPadding, borderRight: isBooleanValue ? "none" : borderValue, backgroundColor: cellShading}}>{getCamelCaseDisplayName(propertyValue)}</div>
@@ -182,13 +244,13 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
     const handleRawEditChange = (editedText) => {
       setRawJsonTextBuffer(editedText)
       try {
-        onChangeCallback(JSON.parse(editedText))
+        onChange(JSON.parse(editedText))
       } catch (error) {
       }
     }
 
     if (true) return (
-              <div id="raw-view" style={{border: "1px solid black", backgroundColor: "none", fontSize: "0.8em", height: "100%", width: "99.5%", padding: "0.0em"}}>
+              <div id="raw-view" style={{border: "1px solid black", backgroundColor: "none", fontSize: fontSizes.rawView.fontSize, height: "100%", width: "99.9%", padding: "0.0em"}}>
                 <div style={{height: "100%", width: "100%", backgroundColor: "none"}}>
                   <pre style={{height: "100%", width: "100%"}}>
                     <textarea id="raw-editor"
@@ -196,7 +258,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                       value={rawJsonTextBuffer}
                       placeholder=""
                       onChange={(event) => handleRawEditChange(event.target.value)}
-                      style={{ paddingLeft: "0.4em", fontFamily: '"Roboto", "Helvetica", "Arial", "sans-serif"', fontSize: "0.9em", border: "none", height: "95%", width: "98%" }}
+                      style={{ paddingLeft: "0.4em", fontFamily: '"Roboto", "Helvetica", "Arial", "sans-serif"', fontSize: fontSizes.rawView.inputFontSize, border: "none", height: "95%", width: "100%" }}
                     />
                   </pre>
                 </div>
@@ -207,42 +269,80 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
   function formView() {
 
     const accentColor = "#727ea6"
+
     const styles = {
       form: {
         fontFamily: "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif",
         padding: "0.5em 0 0 0"
       },
       row: {
-        padding: "0.2em 0em 0em 0em",
-        fontSize: "0.7em",
+        default: {
+            padding: "0.2em 0em 0em 0em",
+            fontSize: fontSizes.formView.fontSize
+        },
+        soft: {
+            padding: "0.2em 0em 0.5em 0em",
+            fontSize: fontSizes.formView.fontSize
+        }
       },
       rowHeader: {
-        backgroundColor: accentColor,
-        padding: "0.3em 0em 0.4em 1.0em",
-        margin: "0.9em 0 0.2em 0",
-        width: "95%",
-        fontSize: "0.7em",
-        fontWeight: "bold",
-        color: "white",
-        borderRadius: "3px"
+        default : {
+          backgroundColor: accentColor,
+          padding: "0.3em 0em 0.4em 1.0em",
+          margin: "0.9em 0 0.2em 0",
+          width: "98%",
+          fontSize: fontSizes.formView.rowHeaderFontSize,
+          fontWeight: "bold",
+          color: "white",
+          borderRadius: "3px"
+        },
+        soft: {
+          backgroundColor: "rgb(240, 240, 240)",
+          padding: "0.5em 0em 0.6em 1.0em",
+          margin: "0.9em 0 0.7em 0",
+          width: "98%",
+          fontSize: fontSizes.formView.rowHeaderFontSize,
+          fontWeight: "normal",
+          color: "gray",
+          borderRadius: "3px"
+        }
       },
       arrayElementHeader: {
-        backgroundColor: "none",
-        padding: "0.25em 0em 0.25em 0em",
-        width: "100%",
-        fontSize: "0.6em"
+        default: {
+            backgroundColor: "#e4eaf5",
+            padding: "0.25em 0em 0.25em 0.8em",
+            width: "90%",
+            marginTop: "0.5em",
+            borderRadius: "3px",
+            fontSize: fontSizes.formView.arrayElementHeaderFontSize,
+        },
+        soft: {
+            backgroundColor: "rgb(248, 248, 248)",
+            padding: "0.5em 0em 0.75em 0.8em",
+            width: "90%",
+            fontSize: fontSizes.formView.arrayElementHeaderFontSize,
+            marginBottom: "0.3em"
+        }
       },
       inputFieldLabel: {
-        padding: "0.0em 0 0.3em 0",
-        fontSize: "0.6em",
+        padding: variant == "soft" ? "0.0em 0 0.4em 0" : "0.0em 0 0.3em 0",
+        fontSize: fontSizes.formView.inputFieldLabelFontSize,
         color: "#212533",
         fontWeight: "normal"
+
       },
       inputField: {
-        border: "1px solid " + "#212533",
-        padding: "0em 0em 0.2em 0em",
-        margin: "0 0 0.2em 0",
-        borderRadius: "2px" 
+        default: {
+          border: "1px solid " + "#212533",
+          padding: (fontBase == 0.6) ? "0em 0em 0.2em 0em" : "0.2em 0em 0.2em 0em",
+          margin: "0 0 0.2em 0",
+          borderRadius: "2px" 
+        },
+        soft: {
+          borderBottom: "1px solid " + "gray",
+          padding: (fontBase == 0.6) ? "0em 0em 0.2em 0em" : "0.2em 0em 0.2em 0em",
+          margin: "0 0 0.2em 0.9em"
+        }
       },
       checkbox: {
         border: "1px solid " + accentColor,
@@ -251,19 +351,31 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
         display: "inline-block",
         margin: "auto 0.7em auto auto",
         verticalAlign: "middle",
-        checkedColor: accentColor,
+        checkedColor: variant == "soft" ? "darkGray" : accentColor,
         uncheckedColor: "white"
       },
-      checkboxLabel: {
+      checkboxFieldLabel: {
+        color: "#212533",
         display: "inline-block",
         margin: "auto",
         verticalAlign: "middle",
-        padding: "0 0 0 0"
       },
       textInput: { 
         padding: "0em 0 0.1em 0.4em",
-        fontSize: "0.8em",
-        width: "98%"
+        fontSize: fontSizes.formView.inputFontSize,
+        width: "97%"
+      },
+      menuItemInput: {
+        padding: (fontBase == 0.6) ? "0.2em 0 0.1em 0.4em" : "0.1em 0em 0.1em 0.4em",
+        fontSize: fontSizes.formView.inputFontSize,
+        width: "97%",
+        cursor: "pointer"
+      },
+      menuItemDisplay: {
+        lineHeight: "1.5"
+      },
+      menu: {
+        padding: "0.6em 1.0em 0.6em 1.0em"
       }
     }
 
@@ -275,7 +387,54 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
           var _flattenedJsonObject = JSON.parse(JSON.stringify(flattenedJsonObject))
           _flattenedJsonObject[key]["value"] = "" + value
         }
-        onChangeCallback(window.convertFlatObjectBackToJsonObject(_flattenedJsonObject, 0, 0, {lineNumber: 0}))
+        const _jsonObject = window.convertFlatObjectBackToJsonObject(_flattenedJsonObject, {}, 0, {lineNumber: 0})
+        setRawJsonTextBuffer(JSON.stringify(_jsonObject, null, 2))
+        onChange(_jsonObject)
+    }
+
+    const registerEnumeratedValue = (id) => {
+      if (!dropdownMenuState.hasOwnProperty(id)) {
+        var state = {...dropdownMenuState}
+        state[id] = {open: false}
+        setDropdownMenuState(state)
+      }
+    }
+
+    const isMenuOpen = (id) => {
+      if (!dropdownMenuState.hasOwnProperty(id)) {
+        return false
+      } else {
+        const isOpen = dropdownMenuState[id]["open"]
+        return isOpen
+      }  
+    }
+
+    const handleMenuItemSelected = (menuId, key, value) => {
+      handleMenuClose(menuId)
+      handleFormChange(key, value)
+    }
+
+    const handleMenuClose = (id) => {
+      if (isMenuOpen(id)) {
+        var state = {...dropdownMenuState}
+        state[id]["open"] = false
+        setDropdownMenuState(state)
+      }
+    }
+
+    const toggleMenuState = (id) => {
+      var state = {...dropdownMenuState}
+      // We want to make sure only one menu is open, so close any that we're not toggling
+      for (var i in Object.keys(state)) {
+        if (Object.keys(state)[i] == id) {
+          state[id]["open"] = !state[id]["open"]
+        } else {
+          state[Object.keys(state)[i]]["open"] = false
+        }
+      }
+      
+      //state[id]["open"] = !state[id]["open"]
+      setDropdownMenuState(state)
     }
 
     return (
@@ -288,24 +447,42 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                 const indentationPadding =(flattenedJsonObject[key]["indentLevel"] * 1 + 0.5) + "em"
                 const isBoolean = (flattenedJsonObject[key]["type"] == "boolean")
                 const hasEnum =  (flattenedJsonObject[key].hasOwnProperty("enum"))
-                //const cellShading = tableViewStyles.grid.shadingColors[flattenedJsonObject[key]["indentLevel"]]
+                const uniqueFieldId = "menu-field-" + key
+                if (hasEnum) {
+                  registerEnumeratedValue(uniqueFieldId)
+                }
                 if (fieldValue !== undefined) {
                   return (
-                    <div id="row" style={{...styles.row, marginLeft: indentationPadding}} key={"row-" + key}>
+                    <div id="row" style={{...styles.row[variant], marginLeft: indentationPadding}} key={"row-" + key}>
                       { 
                       !isBoolean ? 
                         <>
                             <div id="input-field-label" style={styles.inputFieldLabel}>
                               {getCamelCaseDisplayName(fieldName)}
                             </div>
-                            <div id="input-field" style={styles.inputField}>
+                            <div id="input-field" style={styles.inputField[variant]}>
                               { 
                                 hasEnum ?
-                                  <Menu 
-                                    menuItems={flattenedJsonObject[key]["enum"]} 
-                                    displayElement=<span style={styles.textInput}>{fieldValue}</span>
-                                    itemSelectionCallback={(selectedItem, index) => {handleFormChange(key, selectedItem)}}
-                                  />
+                                  <>
+                                    <div style={styles.menuItemInput} onClick={(event) => {toggleMenuState(uniqueFieldId); event.stopPropagation()}}>{fieldValue}</div>
+                                    <Menu 
+                                      _menuItems={flattenedJsonObject[key]["enum"]} 
+                                      _displayElement=<span style={styles.textInput}>{fieldValue}</span>
+                                      _itemSelectionCallback={(selectedItem, index) => {handleFormChange(key, selectedItem)}}
+                                      open={isMenuOpen(uniqueFieldId)}
+                                      onClose={() => handleMenuClose(uniqueFieldId)}
+                                    >
+                                      <div style={styles.menu}>
+                                        {
+                                          flattenedJsonObject[key]["enum"].map((item, index) => (
+                                            <div id={"menu-item-" + uniqueFieldId} onClick={() => handleMenuItemSelected(uniqueFieldId, key, item)} style={styles.menuItemDisplay}>
+                                                {item}
+                                            </div>
+                                          ))
+                                        }
+                                      </div>
+                                    </Menu>
+                                  </>
                                   :
                                   <input className="Input"
                                       id={"row-" + key}
@@ -321,7 +498,7 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                           <>
                             <div id={"checkbox-row-" + key} style={{...styles.checkbox, backgroundColor: fieldValue ? styles.checkbox.checkedColor : styles.checkbox.unCheckedColor }} onClick={(event) => handleFormChange(key, null)}>
                             </div>
-                            <div id="input-field-label" style={styles.checkboxLabel}>
+                            <div id="input-field-label" style={styles.checkboxFieldLabel}>
                               {getCamelCaseDisplayName(fieldName)}
                             </div>
                           </>
@@ -330,13 +507,13 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
                   )
                 } else if (fieldName.includes("[") && fieldName.includes("]")) {
                   return  (
-                    <div id="array-element-label" style={{...styles.arrayElementHeader, marginLeft: indentationPadding}} key={"row-" + key}>
+                    <div id="array-element-label" style={{...styles.arrayElementHeader[variant], marginLeft: indentationPadding}} key={"row-" + key}>
                       {getCamelCaseDisplayName(fieldName)}
                     </div>
                   )
                 } else  {
                   return  (
-                    <div id="section-row" style={{...styles.rowHeader, marginLeft: indentationPadding}} key={"row-" + key}>
+                    <div id="section-row" style={{...styles.rowHeader[variant], marginLeft: indentationPadding}} key={"row-" + key}>
                       {getCamelCaseDisplayName(fieldName)}
                     </div>
                   )
@@ -353,13 +530,16 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
     if (option.includes("table")) setView("table")
     if (option.includes("{ }")) setView("raw")
     if (option.includes("form")) setView("form")
+    if (option.includes("debug")) setView("debug")
   }
 
+  var toggleOptions = [ "{ }", "table", "<form>" ]
+  if (window.location.search.includes("debugJson")) toggleOptions.push("debug")
   return (
     <>
-       <div style={{width: "99.5%", fontSize: "0.6em"}}>
-         <ToggleSwitch options = {[ "{ }", "table", "<form>" ]} defaultSelected={defaultView} onSelect={toggleView} />
-       </div>
+       {showToggle && <div style={{width: "100%", fontSize: fontSizes.toggleBar.fontSize}}>
+         <ToggleSwitch options = {toggleOptions} defaultSelected={defaultView} onSelect={toggleView} />
+       </div>}
        { view == "table" &&
          <div style={{ width: "100%", height: "100%", border: "0px solid black", backgroundColor: "none", overflow: "auto"}}>
            {tableView()}
@@ -370,6 +550,9 @@ export default function JsonFormEditor({json, defaultView="table", onChangeCallb
        }
        {
          view == "form" && formView()
+       }
+       {
+         view == "debug" && debugView()
        }
     </>
   )

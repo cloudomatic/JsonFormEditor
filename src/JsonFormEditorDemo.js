@@ -1,5 +1,6 @@
 import React from 'react';
 import JsonFormEditor from './JsonFormEditor.js';
+import Text from './Text.js';
 
 export default function  JsonFormEditorDemo(props) {
 
@@ -27,55 +28,41 @@ export default function  JsonFormEditorDemo(props) {
     }
   )
 
-  const [sourceJsonText, setSourceJsonText] = React.useState(JSON.stringify(jsonObject, null, 2))
+  const [formSettings, setFormSettings] = React.useState({
+    "size::enum::small:medium:large":  "medium",
+    "width": "400",
+    "width (units)": "px",
+    "height": "800",
+    "height (units)": "px",
+    "variant::enum::default:soft": "soft"
+  })
 
-  const handleBaseJsonObjectFieldChange = (event) => {
-    setSourceJsonText(event.target.value)
-    try {
-      setJsonObject(JSON.parse(event.target.value))
-      //setFlattenedJsonObject(window.convertJsonObjectToFlatObject(jsonObject, { lineNumber: 0}, 0))
-      //setReconstructedJsonObject(window.convertFlatObjectBackToJsonObject(flattenedJsonObject, jsonObject, 0, 0, {lineNumber: 0}))
-    } catch (error) { 
-      debugger
-      console.log(error)
-    }
 
+  const handleFormChange = (json) => {
+    setJsonObject(json)
   }
 
-  const jsonPropertyInspectorChanged = (json) => {
-    setJsonObject(json)
+  const handleFormDisplaySettingsChange = (json) => {
+    setFormSettings(json)
   }
 
   return (
       <>
         <div>
-          <div style={{display: "flex", flexWrap: "wrap", backgroundColor: "none", justifyContent: "center", paddingTop: "2.0em"}}>
-            <div id="source-json-input" style={{border: "1px solid black", backgroundColor: "none", fontSize: "0.8em"}}>
-              <div style={{padding: "0.5em", backgroundColor: "lightGray"}}>Source JSON</div>
-              <pre>
-                <textarea id="baseJsonObject"
-                  type="text"
-                  cols="80"
-                  rows="30"
-                  value={sourceJsonText}
-                  placeholder=""
-                  onChange={(event) => handleBaseJsonObjectFieldChange(event)}
-                  style={{ paddingLeft: "1.0em", fontFamily: '"Roboto", "Helvetica", "Arial", "sans-serif"', fontSize: "0.8em", border: "none"}}
-                />
-              </pre>
+          <div style={{ display: "flex", flexWrap: "wrap", backgroundColor: "none", justifyContent: "center", paddingTop: "2.0em"}}>
+            <div style={{width: "10em", border: "0px solid lightGray"}}>
+              <JsonFormEditor  json={formSettings} onChange={handleFormDisplaySettingsChange} defaultView="form" />
             </div>
-            &nbsp;
-            <div style={{ width: "20em", height: "20em"}}>
-              <JsonFormEditor json={jsonObject} onChangeCallback={jsonPropertyInspectorChanged} defaultView="table" />
-            </div>
-            &nbsp; &nbsp;
-            <div id="item-1" style={{border: "1px solid black",fontSize: "0.8em", width: "20em", backgroundColor: "none"}} >
-              <div style={{padding: "0.5em", backgroundColor: "lightGray"}}>JSON as modified by the form</div>
-              <div style={{padding: "1.0em"}}>
-                <pre>
-                  {JSON.stringify(jsonObject, null, 2)}
-                </pre>
-              </div>
+            <div id="spacer" style={{width: "2%"}} />
+            <div style={{ width: formSettings.width + formSettings["width (units)"], height: formSettings.height + formSettings["height (units)"]}}>
+              <JsonFormEditor 
+                showToggle={true} 
+                variant={formSettings["variant::enum::default:soft"]} 
+                json={jsonObject} 
+                size={formSettings["size::enum::small:medium:large"]} 
+                onChange={handleFormChange} 
+                defaultView="form" 
+              />
             </div>
           </div>
         </div>
