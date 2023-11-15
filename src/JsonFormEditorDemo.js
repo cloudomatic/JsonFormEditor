@@ -34,7 +34,7 @@ export default function  JsonFormEditorDemo(props) {
     "width (units)": "px",
     "height": "800",
     "height (units)": "px",
-    "variant::enum::default:soft": "soft"
+    "variant::enum::default:soft": "default"
   })
 
 

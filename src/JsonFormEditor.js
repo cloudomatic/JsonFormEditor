@@ -311,17 +311,15 @@ export default function JsonFormEditor({json, defaultView="table", variant="defa
         default: {
             backgroundColor: "#e4eaf5",
             padding: "0.25em 0em 0.25em 0.8em",
-            width: "90%",
-            marginTop: "0.5em",
+            margin: "0.5em 0 0.3em 0.5em",
             borderRadius: "3px",
             fontSize: fontSizes.formView.arrayElementHeaderFontSize,
         },
         soft: {
             backgroundColor: "rgb(248, 248, 248)",
             padding: "0.5em 0em 0.75em 0.8em",
-            width: "90%",
             fontSize: fontSizes.formView.arrayElementHeaderFontSize,
-            marginBottom: "0.3em"
+            margin: "0.5em 0 0.3em 0.5em",
         }
       },
       inputFieldLabel: {
@@ -444,7 +442,10 @@ export default function JsonFormEditor({json, defaultView="table", variant="defa
               if (key !== "lineNumber") {
                 const fieldName = flattenedJsonObject[key]["key"]
                 const fieldValue = flattenedJsonObject[key]["value"]
-                const indentationPadding =(flattenedJsonObject[key]["indentLevel"] * 1 + 0.5) + "em"
+                const indentationPadding = (variant == "soft") ? 
+                                              (flattenedJsonObject[key]["indentLevel"] * 1 + 0.6) + "em"
+                                              :
+                                              (flattenedJsonObject[key]["indentLevel"] * 1 + 0.2) + "em"
                 const isBoolean = (flattenedJsonObject[key]["type"] == "boolean")
                 const hasEnum =  (flattenedJsonObject[key].hasOwnProperty("enum"))
                 const uniqueFieldId = "menu-field-" + key
@@ -507,8 +508,10 @@ export default function JsonFormEditor({json, defaultView="table", variant="defa
                   )
                 } else if (fieldName.includes("[") && fieldName.includes("]")) {
                   return  (
-                    <div id="array-element-label" style={{...styles.arrayElementHeader[variant], marginLeft: indentationPadding}} key={"row-" + key}>
-                      {getCamelCaseDisplayName(fieldName)}
+                    <div styles={{justifyContent: "right"}}>
+                      <div id="array-element-label" style={{...styles.arrayElementHeader[variant], marginLeft: indentationPadding}} key={"row-" + key}>
+                        {getCamelCaseDisplayName(fieldName)}
+                      </div>
                     </div>
                   )
                 } else  {
