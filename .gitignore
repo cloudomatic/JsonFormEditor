@@ -1,5 +1,7 @@
 yarn.lock
+**/nohup.out
 .DS_Store
-*/*.swp
+**/*.swp
+build
 node_modules
 

@@ -61,7 +61,7 @@ export default function  JsonFormEditorDemo(props) {
                 json={jsonObject} 
                 size={formSettings["size::enum::small:medium:large"]} 
                 onChange={handleFormChange} 
-                defaultView="form" 
+                defaultView="table" 
               />
             </div>
           </div>
